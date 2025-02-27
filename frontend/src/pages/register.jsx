@@ -1,5 +1,4 @@
 import React from "react";
-import heroimg from "../assets/cup.png";
 
 const Register = () => {
   return (
