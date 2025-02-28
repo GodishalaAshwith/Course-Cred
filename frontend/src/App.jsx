@@ -4,8 +4,8 @@ import "./App.css";
 import Home from "./pages/Home";
 
 import Navbar from "./components/Navbar";
-import Shop from "./pages/Shop";
-import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import ContactUs from "./pages/ContactUs";
 import Register from "./pages/register";
 
 function App() {
@@ -13,10 +13,10 @@ function App() {
     <Router>
       <Navbar />
       <Routes>
-        <Route path="/home" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/shop" element={<Shop />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/contactus" element={<ContactUs />} />
       </Routes>
     </Router>
   );

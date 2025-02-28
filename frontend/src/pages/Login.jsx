@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-const Register = () => {
+const Login = () => {
   useEffect(() => {
     AOS.init({ duration: 1000, once: false, mirror: true });
   }, []);
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
   });
@@ -39,17 +38,8 @@ const Register = () => {
         className="bg-white p-10 rounded-xl shadow-2xl max-w-md w-full text-center"
         data-aos="fade-up"
       >
-        <h2 className="text-4xl font-bold text-indigo-700 mb-6">Register</h2>
+        <h2 className="text-4xl font-bold text-indigo-700 mb-6">Login</h2>
         <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            required
-          />
           <input
             type="email"
             name="email"
@@ -72,13 +62,13 @@ const Register = () => {
             type="submit"
             className="w-full bg-indigo-600 text-white py-3 rounded-md font-semibold hover:bg-indigo-700 transition-all"
           >
-            Sign Up
+            Login
           </button>
         </form>
         <p className="mt-4 text-gray-600">
-          Already have an account?{" "}
-          <a href="/login" className="text-indigo-600 hover:underline">
-            Login
+          Don't have an account?{" "}
+          <a href="/register" className="text-indigo-600 hover:underline">
+            Sign Up
           </a>
         </p>
       </div>
@@ -86,4 +76,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Login;

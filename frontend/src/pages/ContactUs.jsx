@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-const Register = () => {
+const ContactUs = () => {
   useEffect(() => {
     AOS.init({ duration: 1000, once: false, mirror: true });
   }, []);
@@ -10,7 +10,7 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    password: "",
+    message: "",
   });
 
   const handleChange = (e) => {
@@ -39,7 +39,7 @@ const Register = () => {
         className="bg-white p-10 rounded-xl shadow-2xl max-w-md w-full text-center"
         data-aos="fade-up"
       >
-        <h2 className="text-4xl font-bold text-indigo-700 mb-6">Register</h2>
+        <h2 className="text-4xl font-bold text-indigo-700 mb-6">Contact Us</h2>
         <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
           <input
             type="text"
@@ -59,31 +59,25 @@ const Register = () => {
             className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             required
           />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
+          <textarea
+            name="message"
+            placeholder="Your Message"
+            value={formData.message}
             onChange={handleChange}
             className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            rows="4"
             required
-          />
+          ></textarea>
           <button
             type="submit"
             className="w-full bg-indigo-600 text-white py-3 rounded-md font-semibold hover:bg-indigo-700 transition-all"
           >
-            Sign Up
+            Send Message
           </button>
         </form>
-        <p className="mt-4 text-gray-600">
-          Already have an account?{" "}
-          <a href="/login" className="text-indigo-600 hover:underline">
-            Login
-          </a>
-        </p>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default ContactUs;
