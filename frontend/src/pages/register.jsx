@@ -1,29 +1,51 @@
 import React, { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Register = () => {
   useEffect(() => {
-    AOS.init({ duration: 1000, once: false, mirror: true });
+    AOS.init({ duration: 1000, once: true, mirror: false });
   }, []);
 
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Submitted", formData);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Registration successful! Please log in.");
+        window.location.href = "/login"; // Redirect after registration
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Registration Error:", error);
+    }
   };
 
   return (
-    <div className="bg-gray-50 font-sans custom-scrollbar flex items-center justify-center h-screen">
+    <div className="bg-gray-50 font-sans custom-scrollbar flex items-center justify-center min-h-screen p-6">
       <style>
         {`
           ::-webkit-scrollbar {
@@ -36,10 +58,18 @@ const Register = () => {
         `}
       </style>
       <div
-        className="bg-white p-10 rounded-xl shadow-2xl max-w-md w-full text-center"
+        className="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full text-center"
         data-aos="fade-up"
       >
-        <h2 className="text-4xl font-bold text-indigo-700 mb-6">Register</h2>
+        <h2 className="text-4xl font-bold text-indigo-700 mb-6">
+          Create Account
+        </h2>
+        <p className="text-gray-600 mb-6">
+          Join us and start your learning journey!
+        </p>
+
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+
         <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
           <input
             type="text"
@@ -70,11 +100,17 @@ const Register = () => {
           />
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-3 rounded-md font-semibold hover:bg-indigo-700 transition-all"
+            className="w-full bg-indigo-600 text-white py-3 rounded-md font-semibold hover:bg-indigo-700 transition-all flex items-center justify-center"
+            disabled={loading}
           >
-            Sign Up
+            {loading ? (
+              <span className="animate-spin h-5 w-5 border-t-2 border-white rounded-full"></span>
+            ) : (
+              "Sign Up"
+            )}
           </button>
         </form>
+
         <p className="mt-4 text-gray-600">
           Already have an account?{" "}
           <a href="/login" className="text-indigo-600 hover:underline">
