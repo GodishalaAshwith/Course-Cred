@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -10,6 +11,19 @@ const Navbar = () => {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -20,11 +34,15 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-indigo-600 text-white shadow-lg p-4">
-      <div className="container mx-auto flex justify-between items-center">
+    <nav
+      className={`fixed top-0 left-0 w-full z-50 transition duration-300 ${
+        scrolled ? "bg-indigo-600 shadow-lg" : "bg-transparent"
+      }`}
+    >
+      <div className="container mx-auto flex justify-between items-center py-4 px-6">
         <Link
           to="/"
-          className="text-3xl font-bold tracking-wide hover:text-indigo-300 transition duration-300"
+          className="text-3xl font-bold tracking-wide text-white hover:text-indigo-300 transition duration-300"
         >
           CourseCred
         </Link>
@@ -32,13 +50,13 @@ const Navbar = () => {
         <div className="space-x-6 flex items-center">
           <Link
             to="/"
-            className="hover:bg-indigo-500 px-4 py-2 rounded-lg transition duration-300"
+            className="text-white hover:text-indigo-300 px-4 py-2 rounded-lg transition duration-300"
           >
             Home
           </Link>
           <Link
             to="/contactus"
-            className="hover:bg-indigo-500 px-4 py-2 rounded-lg transition duration-300"
+            className="text-white hover:text-indigo-300 px-4 py-2 rounded-lg transition duration-300"
           >
             Contact
           </Link>
@@ -47,7 +65,7 @@ const Navbar = () => {
             <>
               <Link
                 to="/dashboard"
-                className="hover:bg-indigo-500 px-4 py-2 rounded-lg transition duration-300"
+                className="text-white hover:text-indigo-300 px-4 py-2 rounded-lg transition duration-300"
               >
                 Dashboard
               </Link>
@@ -62,13 +80,13 @@ const Navbar = () => {
             <>
               <Link
                 to="/login"
-                className="hover:bg-indigo-500 px-4 py-2 rounded-lg transition duration-300"
+                className="text-white hover:text-indigo-300 px-4 py-2 rounded-lg transition duration-300"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="hover:bg-indigo-500 px-4 py-2 rounded-lg transition duration-300"
+                className="bg-white text-indigo-600 hover:bg-gray-200 px-4 py-2 rounded-lg font-semibold transition duration-300"
               >
                 Register
               </Link>

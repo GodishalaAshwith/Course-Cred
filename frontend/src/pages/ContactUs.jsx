@@ -23,54 +23,53 @@ const ContactUs = () => {
   };
 
   return (
-    <div className="bg-gray-50 font-sans custom-scrollbar flex items-center justify-center h-screen">
-      <style>
-        {`
-          ::-webkit-scrollbar {
-            width: 8px;
-          }
-          ::-webkit-scrollbar-thumb {
-            background: linear-gradient(to bottom, #4f46e5, #3b82f6);
-            border-radius: 10px;
-          }
-        `}
-      </style>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-700 to-indigo-600 text-white">
       <div
-        className="bg-white p-10 rounded-xl shadow-2xl max-w-md w-full text-center"
+        className="bg-white p-8 md:p-10 rounded-2xl shadow-2xl max-w-lg w-full"
         data-aos="fade-up"
       >
-        <h2 className="text-4xl font-bold text-indigo-700 mb-6">Contact Us</h2>
+        <h2 className="text-4xl font-extrabold text-indigo-700 mb-6 text-center">
+          Contact Us
+        </h2>
+        <p className="text-gray-600 mb-6 text-center">
+          We'd love to hear from you! Fill out the form below and we'll get back
+          to you as soon as possible.
+        </p>
         <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+          {/* Name Input */}
           <input
             type="text"
             name="name"
             placeholder="Full Name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
+          {/* Email Input */}
           <input
             type="email"
             name="email"
             placeholder="Email Address"
             value={formData.email}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
+          {/* Message Input */}
           <textarea
             name="message"
             placeholder="Your Message"
             value={formData.message}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             rows="4"
             required
           ></textarea>
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-3 rounded-md font-semibold hover:bg-indigo-700 transition-all"
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-all"
           >
             Send Message
           </button>

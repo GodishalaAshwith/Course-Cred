@@ -51,7 +51,7 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-gray-50 font-sans custom-scrollbar flex items-center justify-center h-screen">
+    <div className="bg-gradient-to-r from-blue-700 to-indigo-600 flex items-center justify-center h-screen">
       <style>
         {`
           ::-webkit-scrollbar {
@@ -64,7 +64,7 @@ const Login = () => {
         `}
       </style>
       <div
-        className="bg-white p-10 rounded-xl shadow-2xl max-w-md w-full text-center"
+        className="bg-white p-10 rounded-2xl shadow-2xl max-w-md w-full text-center"
         data-aos="fade-up"
       >
         <h2 className="text-4xl font-bold text-indigo-700 mb-6">Login</h2>
@@ -75,7 +75,7 @@ const Login = () => {
             placeholder="Email Address"
             value={formData.email}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
           <input
@@ -84,12 +84,12 @@ const Login = () => {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-3 rounded-md font-semibold hover:bg-indigo-700 transition-all"
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-all"
           >
             Login
           </button>

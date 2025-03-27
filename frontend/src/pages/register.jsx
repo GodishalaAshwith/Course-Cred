@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 const Register = () => {
   useEffect(() => {
@@ -25,6 +24,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
@@ -35,17 +35,20 @@ const Register = () => {
       const data = await response.json();
       if (response.ok) {
         alert("Registration successful! Please log in.");
-        window.location.href = "/login"; // Redirect after registration
+        navigate("/login"); // Redirect after registration
       } else {
-        alert(data.message);
+        setError(data.message);
       }
     } catch (error) {
       console.error("Registration Error:", error);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-gray-50 font-sans custom-scrollbar flex items-center justify-center min-h-screen p-6">
+    <div className="bg-gradient-to-r from-blue-700 to-indigo-600 flex items-center justify-center min-h-screen p-6">
       <style>
         {`
           ::-webkit-scrollbar {
@@ -58,7 +61,7 @@ const Register = () => {
         `}
       </style>
       <div
-        className="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full text-center"
+        className="bg-white p-10 rounded-2xl shadow-2xl max-w-md w-full text-center"
         data-aos="fade-up"
       >
         <h2 className="text-4xl font-bold text-indigo-700 mb-6">
@@ -77,7 +80,7 @@ const Register = () => {
             placeholder="Full Name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
           <input
@@ -86,7 +89,7 @@ const Register = () => {
             placeholder="Email Address"
             value={formData.email}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
           <input
@@ -95,12 +98,12 @@ const Register = () => {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             required
           />
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-3 rounded-md font-semibold hover:bg-indigo-700 transition-all flex items-center justify-center"
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-all flex items-center justify-center"
             disabled={loading}
           >
             {loading ? (

@@ -21,6 +21,7 @@ const Home = () => {
           }
         `}
       </style>
+
       {/* Hero Section */}
       <section
         className="h-screen bg-gradient-to-r from-blue-700 to-indigo-600 text-white text-center flex flex-col items-center justify-center px-6"
@@ -42,7 +43,7 @@ const Home = () => {
       </section>
 
       {/* How It Works */}
-      <section className="h-screen flex flex-col justify-center items-center text-center px-6">
+      <section className="py-20 flex flex-col justify-center items-center text-center px-6 bg-gray-100">
         <h2
           className="text-5xl font-bold mb-12 text-gray-800"
           data-aos="fade-up"
@@ -82,7 +83,7 @@ const Home = () => {
 
       {/* Featured Courses */}
       <section
-        className="h-screen flex flex-col justify-center items-center bg-gray-100 text-center px-6"
+        className="py-20 flex flex-col justify-center items-center bg-gray-50 text-center px-6"
         data-aos="fade-up"
       >
         <h2 className="text-5xl font-bold mb-12 text-gray-800">
@@ -115,7 +116,7 @@ const Home = () => {
 
       {/* Testimonials */}
       <section
-        className="h-screen flex flex-col justify-center items-center text-center bg-white px-6"
+        className="py-20 flex flex-col justify-center items-center text-center bg-white px-6"
         data-aos="fade-up"
       >
         <h2 className="text-5xl font-bold mb-12 text-gray-800">
