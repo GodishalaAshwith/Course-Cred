@@ -18,15 +18,6 @@ FRAME_FOLDER = "frames"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(FRAME_FOLDER, exist_ok=True)
 
-# Simple topic classification using keywords
-TOPIC_KEYWORDS = {
-    "Mathematics": ["algebra", "calculus", "geometry", "equation", "function"],
-    "Programming": ["python", "code", "algorithm", "function", "variable"],
-    "Physics": ["force", "motion", "energy", "velocity", "gravity"],
-    "Biology": ["cell", "DNA", "organism", "evolution", "species"],
-    "History": ["war", "empire", "kingdom", "revolution", "ancient"],
-    "Business": ["finance", "market", "economy", "profit", "investment"]
-}
 
 # Delete old frames
 def clear_frames():
@@ -70,32 +61,54 @@ def extract_text_from_images(folder):
             extracted_text.append(text)
             previous_text = text
 
-        if len(extracted_text) >= 10:  # Limit processing to 10 texts
+        if len(extracted_text) >= 140:  # Limit processing to 10 texts
             break
 
     return extracted_text
 
-# Determine topic, difficulty, and credits
+contents = {}
+
+
+# AIzaSyDXpeE-cheNVGRdQR7H9U8cN9wF7lUzxtA
+
+
+from google import genai
+
+client = genai.Client(api_key="AIzaSyDXpeE-cheNVGRdQR7H9U8cN9wF7lUzxtA")
+
+response = client.models.generate_content(
+    model="gemini-2.0-flash", contents="Explain how AI works in a few words"
+)
+summary = response.text
+
 def analyze_text(text_data):
     if not text_data:
         return {"summary": "No readable text found.", "topic": "Unknown", "difficulty": "Unknown", "credits": 0}
+    
+    summaryRes = client.models.generate_content(
+        model="gemini-2.0-flash", contents=f"Make sure to not have any additional text than what is asked here: Summarize the following text in 2 lines: {text_data}"
+    )
+    summary = summaryRes.text
 
-    # Summarize: Just pick the first 2 extracted text blocks
-    summary = " ".join(text_data[:2])
+    topicRes = client.models.generate_content(
+        model="gemini-2.0-flash", contents=f"Make sure to give only the list formatted properly with commas not numbers as output: Give me the relevant topics involed in this text, only topics that have a major impact in subject knowledge : {text_data}"
+    )
+    topic = topicRes.text
 
-    # Detect topic using keyword matching
-    detected_topic = "Unknown"
-    for topic, keywords in TOPIC_KEYWORDS.items():
-        if any(word.lower() in summary.lower() for word in keywords):
-            detected_topic = topic
-            break
+    difficultyRes = client.models.generate_content(
+        model="gemini-2.0-flash", contents=f"Make sure to give only the number as output: Give me a difficulty level from 1 to 100 for an average human to learn the content of this course that this text is supposedly teaching: {text_data}"
+    )
+    difficulty = difficultyRes.text
 
-    # Assign difficulty and credits
-    difficulty_map = {"Easy": 5, "Medium": 10, "Hard": 15}
-    difficulty = "Easy" if len(summary) < 100 else "Medium" if len(summary) < 300 else "Hard"
-    credits = difficulty_map[difficulty]
+    creditsRes = client.models.generate_content(
+        model="gemini-2.0-flash", contents=f"Make sure to give only the number as output: Based on the difficult give this course a credit ranging from 50 to 500: {text_data}"
+    )
+    credits = creditsRes.text
 
-    return {"summary": summary, "topic": detected_topic, "difficulty": difficulty, "credits": credits}
+    return {"summary": summary, "topic": topic, "difficulty": difficulty, "credits": credits}
+
+
+
 
 @app.route("/upload", methods=["POST"])
 def upload_video():
