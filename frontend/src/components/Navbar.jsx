@@ -69,6 +69,12 @@ const Navbar = () => {
               >
                 Dashboard
               </Link>
+              <Link
+                to="/videos"
+                className="text-white hover:text-indigo-300 px-4 py-2 rounded-lg transition duration-300"
+              >
+                Videos
+              </Link>
               <button
                 onClick={handleLogout}
                 className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold transition duration-300"

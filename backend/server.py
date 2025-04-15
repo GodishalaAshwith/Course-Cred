@@ -1,10 +1,12 @@
 import os
 import cv2
 import pytesseract
+import json
+import argparse
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
-import random
+from google import genai
 
 app = Flask(__name__)
 CORS(app)
@@ -18,6 +20,8 @@ FRAME_FOLDER = "frames"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(FRAME_FOLDER, exist_ok=True)
 
+# Configure Google AI client
+client = genai.Client(api_key="AIzaSyDXpeE-cheNVGRdQR7H9U8cN9wF7lUzxtA")
 
 # Delete old frames
 def clear_frames():
@@ -66,49 +70,83 @@ def extract_text_from_images(folder):
 
     return extracted_text
 
-contents = {}
-
-
-# AIzaSyDXpeE-cheNVGRdQR7H9U8cN9wF7lUzxtA
-
-
-from google import genai
-
-client = genai.Client(api_key="AIzaSyDXpeE-cheNVGRdQR7H9U8cN9wF7lUzxtA")
-
-response = client.models.generate_content(
-    model="gemini-2.0-flash", contents="Explain how AI works in a few words"
-)
-summary = response.text
-
 def analyze_text(text_data):
     if not text_data:
-        return {"summary": "No readable text found.", "topic": "Unknown", "difficulty": "Unknown", "credits": 0}
+        return {
+            "summary": "No readable text found.",
+            "topic": "Unknown",
+            "difficulty": "0",
+            "credits": "50"
+        }
     
     summaryRes = client.models.generate_content(
-        model="gemini-2.0-flash", contents=f"Make sure to not have any additional text than what is asked here: Summarize the following text in 2 lines: {text_data}"
+        model="gemini-2.0-flash",
+        contents=f"Make sure to not have any additional text than what is asked here: Summarize the following text in 2 lines: {text_data}"
     )
     summary = summaryRes.text
 
     topicRes = client.models.generate_content(
-        model="gemini-2.0-flash", contents=f"Make sure to give only the list formatted properly with commas not numbers as output: Give me the relevant topics involed in this text, only topics that have a major impact in subject knowledge : {text_data}"
+        model="gemini-2.0-flash",
+        contents=f"Make sure to give properly with commas not numbers as output: Give me the relevant topics involved in this text, only topics that have a major impact in subject knowledge : {text_data}"
     )
     topic = topicRes.text
 
     difficultyRes = client.models.generate_content(
-        model="gemini-2.0-flash", contents=f"Make sure to give only the number as output: Give me a difficulty level from 1 to 100 for an average human to learn the content of this course that this text is supposedly teaching: {text_data}"
+        model="gemini-2.0-flash",
+        contents=f"Make sure to give only the number as output: Give me a difficulty level from 1 to 100 for an average human to learn the content of this course that this text is supposedly teaching: {text_data}"
     )
     difficulty = difficultyRes.text
 
-    creditsRes = client.models.generate_content(
-        model="gemini-2.0-flash", contents=f"Make sure to give only the number as output: Based on the difficult give this course a credit ranging from 50 to 500: {text_data}"
+    # Get similar topics from database (simulated here with Gemini)
+    similarityRes = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=f"Make sure to give only a number from 0 to 100 as output representing the uniqueness of this content compared to existing courses. Higher number means more unique: Based on the topics {topic}, analyze how unique this content is: {text_data}"
     )
-    credits = creditsRes.text
+    uniqueness = int(similarityRes.text)
 
-    return {"summary": summary, "topic": topic, "difficulty": difficulty, "credits": credits}
+    # Calculate credits based on difficulty and uniqueness
+    try:
+        difficulty_score = int(difficulty)
+        # Base credits between 50-500 based on difficulty
+        base_credits = 50 + (difficulty_score * 4.5)  # This gives 50-500 range
+        
+        # Adjust credits based on uniqueness (can reduce up to 50% for very similar content)
+        uniqueness_factor = (50 + uniqueness) / 100  # This gives 0.5-1.5 range
+        final_credits = int(base_credits * uniqueness_factor)
+        
+        # Ensure credits stay within 50-500 range
+        final_credits = max(50, min(500, final_credits))
+    except:
+        final_credits = 50  # Default if calculation fails
 
+    return {
+        "summary": summary,
+        "topic": topic,
+        "difficulty": difficulty,
+        "credits": str(final_credits),
+        "uniqueness": str(uniqueness)
+    }
 
+def process_video(video_path):
+    # Create frames directory if it doesn't exist
+    os.makedirs("frames", exist_ok=True)
+    
+    # Clear any existing frames
+    clear_frames()
 
+    # Extract frames from video
+    extracted_frames = extract_frames(video_path)
+    
+    # Extract text from frames
+    text_data = extract_text_from_images("frames")
+    
+    # Analyze the extracted text
+    analysis = analyze_text(text_data)
+    
+    # Clean up frames
+    clear_frames()
+    
+    return analysis
 
 @app.route("/upload", methods=["POST"])
 def upload_video():
@@ -143,4 +181,12 @@ def upload_video():
     })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--analyze', type=str, help='Path to video file for analysis')
+    args = parser.parse_args()
+
+    if args.analyze:
+        result = process_video(args.analyze)
+        print(json.dumps(result))
+    else:
+        app.run(debug=True)
