@@ -10,7 +10,8 @@ const VideoSchema = new mongoose.Schema(
     difficulty: { type: String },
     topics: [String],
     summary: { type: String },
-    uniqueness: { type: Number, default: 50 }, // Added uniqueness score
+    uniqueness: { type: Number, default: 50 },
+    videoFingerprint: { type: String }, // Added for duplicate detection
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

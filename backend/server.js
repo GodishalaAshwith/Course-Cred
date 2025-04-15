@@ -28,7 +28,23 @@ app.use(
 );
 app.options("*", cors()); // Handle preflight requests for all routes
 app.use(express.json()); // Parse JSON body
-app.use("/uploads", express.static("uploads")); // Serve uploaded files
+
+// Add security headers for video content
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Content-Security-Policy", "default-src 'self'");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, private"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    next();
+  },
+  express.static("uploads")
+); // Serve uploaded files
 
 // Routes
 app.use("/api/auth", authRoutes);

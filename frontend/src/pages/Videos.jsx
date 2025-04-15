@@ -18,6 +18,9 @@ const Videos = () => {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [userTotalCredits, setUserTotalCredits] = useState(0);
   const [uniqueness, setUniqueness] = useState(0);
+  const [similarityMessage, setSimilarityMessage] = useState("");
+  const [similarity, setSimilarity] = useState(0);
+  const [fingerprint, setFingerprint] = useState("");
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: false, mirror: true });
@@ -93,6 +96,22 @@ const Videos = () => {
       setDifficulty(response.data.difficulty || "Unknown");
       setCredits(response.data.credits || 0);
       setUniqueness(response.data.uniqueness || 0);
+      setSimilarity(response.data.similarity || 0);
+      setSimilarityMessage(response.data.similarity_message || "");
+      setFingerprint(response.data.fingerprint || "");
+
+      // Alert user if the video is a duplicate
+      if (response.data.credits === "0") {
+        alert(
+          "This video appears to be a duplicate. No credits will be awarded."
+        );
+      } else if (response.data.similarity > 0) {
+        alert(
+          `This video has ${response.data.similarity.toFixed(
+            1
+          )}% similarity with existing content. Credits have been adjusted accordingly.`
+        );
+      }
     } catch (error) {
       console.error("Statistics check failed:", error);
       alert("Failed to check statistics! Please try again.");
@@ -114,16 +133,28 @@ const Videos = () => {
     formData.append("summary", summary);
     formData.append("difficulty", difficulty);
     formData.append("topics", topic);
+    formData.append("uniqueness", uniqueness);
+    formData.append("fingerprint", fingerprint);
+    formData.append("similarity_message", similarityMessage);
 
     try {
-      await axios.post("http://localhost:5000/api/videos/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/videos/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
-      alert("Video uploaded successfully!");
+      if (response.data.similarity_message) {
+        alert(response.data.similarity_message);
+      } else {
+        alert("Video uploaded successfully!");
+      }
+
       fetchUserVideos();
       fetchUserCredits(user.id);
       setShowUploadForm(false);
@@ -134,9 +165,43 @@ const Videos = () => {
       setTopic("");
       setDifficulty("");
       setCredits(0);
+      setSimilarity(0);
+      setSimilarityMessage("");
+      setFingerprint("");
+      setUniqueness(0);
     } catch (error) {
       console.error("Upload failed:", error);
-      alert("Upload failed! Please try again.");
+      if (error.response?.data?.similarity_message) {
+        alert(error.response.data.similarity_message);
+      } else {
+        alert("Upload failed! Please try again.");
+      }
+    }
+  };
+
+  const handleDeleteVideo = async (videoId, videoCredits) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this video? Your credits will be reduced accordingly."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:5000/api/videos/${videoId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      // Update local state
+      setVideos(videos.filter((video) => video._id !== videoId));
+      setUserTotalCredits((prev) => Math.max(0, prev - videoCredits));
+      alert("Video deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete video:", error);
+      alert("Failed to delete video. Please try again.");
     }
   };
 
@@ -225,10 +290,25 @@ const Videos = () => {
                     (Higher uniqueness results in more credits)
                   </span>
                 </p>
-                <p className="text-gray-700 font-medium">
+                {similarity > 0 && (
+                  <p className="text-amber-600 mb-2">
+                    <strong>Similarity with existing content:</strong>{" "}
+                    {similarity.toFixed(1)}%
+                    {similarityMessage && (
+                      <span className="block text-sm mt-1">
+                        {similarityMessage}
+                      </span>
+                    )}
+                  </p>
+                )}
+                <p
+                  className={`font-medium ${
+                    credits === 0 ? "text-red-600" : "text-gray-700"
+                  }`}
+                >
                   <strong>Final Credits:</strong> {credits}
                   <span className="ml-2 text-sm text-gray-500">
-                    (Based on difficulty and uniqueness)
+                    (Based on difficulty, uniqueness, and similarity)
                   </span>
                 </p>
               </div>
@@ -252,21 +332,61 @@ const Videos = () => {
                 key={video._id}
                 className="bg-white shadow-lg rounded-lg p-4 flex flex-col"
               >
-                <video
-                  src={`http://localhost:5000/uploads/videos/${video.filename}`}
-                  controls
-                  className="w-full h-40 rounded-lg mb-4 object-cover"
-                />
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {video.title}
-                </h3>
-                <p className="text-gray-600 text-sm mt-2">{video.summary}</p>
-                <div className="mt-auto pt-4">
-                  <p className="text-sm text-gray-500">
+                <div className="relative">
+                  <div className="aspect-w-16 aspect-h-9 mb-4">
+                    <video
+                      className="w-full h-full rounded-lg object-cover"
+                      controlsList="nodownload"
+                      disablePictureInPicture
+                      playsInline
+                      controls
+                    >
+                      <source
+                        src={`http://localhost:5000/uploads/videos/${video.filename}`}
+                        type="video/mp4"
+                      />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteVideo(video._id, video.credits)}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-colors"
+                    title="Delete video"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    {video.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-2">{video.summary}</p>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">
+                      Topics: {video.topics.join(", ")}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Difficulty: {video.difficulty}/100
+                    </p>
+                    <p className="text-sm text-indigo-600 font-semibold">
+                      Credits: {video.credits}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
                     Uploaded: {new Date(video.uploadDate).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-indigo-600 font-semibold">
-                    Credits: {video.credits}
                   </p>
                 </div>
               </div>
