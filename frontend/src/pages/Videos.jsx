@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import axios from "axios";
+import API from "../utils/api";
 
 const Videos = () => {
   const navigate = useNavigate();
@@ -38,11 +38,7 @@ const Videos = () => {
 
   const fetchUserCredits = async (userId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/auth/user`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await API.get(`/auth/user`);
       setUserTotalCredits(response.data.totalCredits || 0);
     } catch (error) {
       console.error("Failed to fetch user credits:", error);
@@ -51,14 +47,7 @@ const Videos = () => {
 
   const fetchUserVideos = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/videos/user-videos",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await API.get("/videos/user-videos");
       setVideos(response.data);
     } catch (error) {
       console.error("Failed to fetch videos:", error);
@@ -80,16 +69,11 @@ const Videos = () => {
     formData.append("video", file);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/videos/analyze",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await API.post("/videos/analyze", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       setSummary(response.data.summary || "No summary available.");
       setTopic(response.data.topic || "Unknown");
@@ -138,16 +122,11 @@ const Videos = () => {
     formData.append("similarity_message", similarityMessage);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/videos/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await API.post("/videos/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.data.similarity_message) {
         alert(response.data.similarity_message);
@@ -189,11 +168,7 @@ const Videos = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:5000/api/videos/${videoId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await API.delete(`/videos/${videoId}`);
 
       // Update local state
       setVideos(videos.filter((video) => video._id !== videoId));
