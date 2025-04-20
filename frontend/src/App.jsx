@@ -12,6 +12,7 @@ import ContactUs from "./pages/ContactUs";
 import Navbar from "./components/Navbar";
 import Videos from "./pages/Videos";
 import BrowseVideos from "./pages/BrowseVideos";
+import Admin from "./pages/Admin";
 
 const PrivateRoute = ({ children }) => {
   return localStorage.getItem("token") ? children : <Navigate to="/login" />;
@@ -52,6 +53,14 @@ function App() {
           element={
             <PrivateRoute>
               <BrowseVideos />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute>
+              <Admin />
             </PrivateRoute>
           }
         />

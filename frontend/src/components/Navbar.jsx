@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../utils/api";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      checkAdminStatus(userData);
     }
 
     const handleScroll = () => {
@@ -27,10 +31,21 @@ const Navbar = () => {
     };
   }, []);
 
+  const checkAdminStatus = async (userData) => {
+    try {
+      const response = await API.get("/auth/user");
+      setIsAdmin(response.data.isAdmin || false);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("adminCode");
     setUser(null);
+    setIsAdmin(false);
     navigate("/login");
   };
 
@@ -106,6 +121,14 @@ const Navbar = () => {
                 >
                   Browse Videos
                 </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded-lg transition duration-300"
+                  >
+                    Admin Panel
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold transition duration-300 text-white"
@@ -171,6 +194,14 @@ const Navbar = () => {
               >
                 Browse Videos
               </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="block bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded-lg transition duration-300"
+                >
+                  Admin Panel
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="w-full text-left bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold transition duration-300 text-white"

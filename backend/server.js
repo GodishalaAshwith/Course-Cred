@@ -6,6 +6,7 @@ const path = require("path");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const videoRoutes = require("./routes/video"); // Import video routes
+const adminRoutes = require("./routes/admin"); // Import admin routes
 
 dotenv.config(); // Load environment variables
 
@@ -24,6 +25,7 @@ app.use(
     origin: "http://localhost:5173", // Allow requests only from your frontend
     methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
     credentials: true, // Allow cookies and credentials
+    exposedHeaders: ["Admin-Access-Code"], // Allow frontend to read this header
   })
 );
 app.options("*", cors()); // Handle preflight requests for all routes
@@ -49,6 +51,7 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/videos", videoRoutes); // Register video routes
+app.use("/api/admin", adminRoutes); // Register admin routes
 
 // Default route
 app.get("/", (req, res) => {
