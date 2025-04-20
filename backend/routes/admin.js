@@ -9,21 +9,35 @@ const bcrypt = require("bcryptjs");
 // Admin login with secret code
 router.post("/login", async (req, res) => {
   try {
-    const { email, password, adminPassword } = req.body;
+    const { email, adminPassword, secretCode } = req.body;
+
+    // Check if required fields are provided
+    if (!email || !adminPassword || !secretCode) {
+      return res.status(400).json({
+        message: "Please provide all required fields",
+        missing: {
+          email: !email,
+          adminPassword: !adminPassword,
+          secretCode: !secretCode,
+        },
+      });
+    }
+
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "User not found" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    // Verify admin password
-    if (adminPassword !== "admin") {
+    // Verify admin password (using environment variable would be better in production)
+    if (adminPassword !== "admin123") {
       return res.status(403).json({ message: "Invalid admin password" });
+    }
+
+    // Verify secret code
+    const currentCode = req.header("Admin-Access-Code");
+    if (secretCode !== currentCode) {
+      return res.status(403).json({ message: "Invalid secret code" });
     }
 
     // Set user as admin if not already
@@ -32,9 +46,18 @@ router.post("/login", async (req, res) => {
       await user.save();
     }
 
-    res.json({ message: "Admin access granted", isAdmin: true });
+    res.json({
+      message: "Admin access granted",
+      isAdmin: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error("Admin login error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

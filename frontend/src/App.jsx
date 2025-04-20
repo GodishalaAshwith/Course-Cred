@@ -13,9 +13,40 @@ import Navbar from "./components/Navbar";
 import Videos from "./pages/Videos";
 import BrowseVideos from "./pages/BrowseVideos";
 import Admin from "./pages/Admin";
+import { useState, useEffect } from "react";
+import API from "./utils/api";
 
 const PrivateRoute = ({ children }) => {
   return localStorage.getItem("token") ? children : <Navigate to="/login" />;
+};
+
+const AdminRoute = ({ children }) => {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const response = await API.get("/auth/user");
+        setIsAdmin(response.data.isAdmin || false);
+      } catch (error) {
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    };
+
+    if (localStorage.getItem("token")) {
+      checkAdmin();
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  return isAdmin ? children : <Navigate to="/dashboard" />;
 };
 
 function App() {
@@ -60,7 +91,9 @@ function App() {
           path="/admin"
           element={
             <PrivateRoute>
-              <Admin />
+              <AdminRoute>
+                <Admin />
+              </AdminRoute>
             </PrivateRoute>
           }
         />

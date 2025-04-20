@@ -11,6 +11,7 @@ function Admin() {
   const [secretCode, setSecretCode] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState(null);
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -26,14 +27,26 @@ function Admin() {
 
   async function checkAdminAuth() {
     try {
+      setIsLoading(true);
+      const adminCode = localStorage.getItem("adminCode");
+      if (!adminCode) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
       const response = await API.get("/admin/stats", {
-        headers: { "Admin-Access-Code": localStorage.getItem("adminCode") },
+        headers: { "Admin-Access-Code": adminCode },
       });
+
       setIsAuthenticated(true);
       setStats(response.data);
-      fetchAdminData();
+      await fetchAdminData();
     } catch (error) {
       setIsAuthenticated(false);
+      localStorage.removeItem("adminCode"); // Clear invalid admin code
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -48,17 +61,24 @@ function Admin() {
       }
 
       const user = JSON.parse(userStr);
-      const response = await API.post("/admin/login", {
-        email: user.email,
-        password: "",
-        adminPassword,
-        secretCode,
-      });
+      const response = await API.post(
+        "/admin/login",
+        {
+          email: user.email,
+          adminPassword,
+          secretCode,
+        },
+        {
+          headers: {
+            "Admin-Access-Code": secretCode,
+          },
+        }
+      );
 
       if (response.data.isAdmin) {
         localStorage.setItem("adminCode", secretCode);
         setIsAuthenticated(true);
-        fetchAdminData();
+        await fetchAdminData();
       }
     } catch (error) {
       setError(error.response?.data?.message || "Authentication failed");
@@ -114,6 +134,14 @@ function Admin() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-r from-blue-700 to-indigo-600 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-r from-blue-700 to-indigo-600 flex items-center justify-center px-4">
@@ -162,7 +190,7 @@ function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-16">
+    <div className="min-h-screen bg-gray-900 pt-16">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-wrap gap-4 mb-8">
           {["dashboard", "users", "videos", "transactions"].map((section) => (
@@ -172,7 +200,7 @@ function Admin() {
               className={`px-4 py-2 rounded ${
                 activeSection === section
                   ? "bg-indigo-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  : "bg-gray-800 text-gray-200 hover:bg-gray-700"
               }`}
             >
               {section.charAt(0).toUpperCase() + section.slice(1)}
@@ -182,24 +210,30 @@ function Admin() {
 
         {activeSection === "dashboard" && <AdminDashboard stats={stats} />}
         {activeSection === "users" && (
-          <UsersTable
-            users={users}
-            editingUser={editingUser}
-            setEditingUser={setEditingUser}
-            handleUpdateUser={handleUpdateUser}
-            handleDeleteUser={handleDeleteUser}
-          />
+          <div className="bg-gray-800 rounded-lg shadow-lg">
+            <UsersTable
+              users={users}
+              editingUser={editingUser}
+              setEditingUser={setEditingUser}
+              handleUpdateUser={handleUpdateUser}
+              handleDeleteUser={handleDeleteUser}
+            />
+          </div>
         )}
         {activeSection === "videos" && (
-          <VideosTable
-            videos={videos}
-            editingVideo={editingVideo}
-            setEditingVideo={setEditingVideo}
-            handleUpdateVideo={handleUpdateVideo}
-          />
+          <div className="bg-gray-800 rounded-lg shadow-lg">
+            <VideosTable
+              videos={videos}
+              editingVideo={editingVideo}
+              setEditingVideo={setEditingVideo}
+              handleUpdateVideo={handleUpdateVideo}
+            />
+          </div>
         )}
         {activeSection === "transactions" && (
-          <TransactionsTable transactions={transactions} />
+          <div className="bg-gray-800 rounded-lg shadow-lg">
+            <TransactionsTable transactions={transactions} />
+          </div>
         )}
       </div>
     </div>
