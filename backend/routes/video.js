@@ -205,8 +205,6 @@ router.get("/all", async (req, res) => {
 // Get Recent Transactions Route
 router.get("/transactions", authMiddleware, async (req, res) => {
   try {
-    console.log("Fetching transactions for user:", req.user.id);
-
     const transactions = await Transaction.find({
       $or: [{ buyer: req.user.id }, { seller: req.user.id }],
     })
@@ -226,10 +224,8 @@ router.get("/transactions", authMiddleware, async (req, res) => {
       .lean()
       .limit(10);
 
-    console.log("Found transactions:", JSON.stringify(transactions, null, 2));
     res.json(transactions);
   } catch (err) {
-    console.error("Transaction error details:", err);
     res.status(500).json({
       error: "Server error",
       details: err.message,
