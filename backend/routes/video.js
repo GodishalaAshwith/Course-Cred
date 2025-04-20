@@ -67,7 +67,12 @@ router.post(
         console.error(`Python Error: ${data}`);
       });
 
-      pythonProcess.on("close", (code) => {
+      pythonProcess.on("close", async (code) => {
+        // Clean up the uploaded file regardless of result
+        if (req.file && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+
         if (code !== 0) {
           return res.status(500).json({ message: "Analysis failed" });
         }
@@ -80,6 +85,10 @@ router.post(
         }
       });
     } catch (err) {
+      // Clean up the uploaded file in case of error
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
       console.error(err);
       res.status(500).json({ error: "Server error" });
     }
@@ -94,7 +103,13 @@ router.post(
   async (req, res) => {
     try {
       const user = await User.findById(req.user.id);
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        // Clean up file if user not found
+        if (req.file && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+        return res.status(404).json({ message: "User not found" });
+      }
 
       const {
         title,
@@ -110,6 +125,10 @@ router.post(
       // Check if the video should receive credits
       const finalCredits = parseInt(credits) || 0;
       if (finalCredits === 0) {
+        // Clean up file if it's a duplicate
+        if (req.file && fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
         return res.status(400).json({
           message:
             "This video appears to be a duplicate. No credits will be awarded.",
@@ -136,12 +155,21 @@ router.post(
       user.totalCredits = (user.totalCredits || 0) + finalCredits;
       await user.save();
 
+      // Delete the video file after successful save
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+
       res.status(201).json({
         message: "Video uploaded successfully",
         video,
         similarity_message: similarity_message || "Original content",
       });
     } catch (err) {
+      // Clean up file in case of error
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
       console.error(err);
       res.status(500).json({ error: "Server error" });
     }
