@@ -174,55 +174,39 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// Get Video by ID Route
-router.get("/:id", async (req, res) => {
+// Get Recent Transactions Route
+router.get("/transactions", authMiddleware, async (req, res) => {
   try {
-    const video = await Video.findById(req.params.id).populate("owner", "name");
-    if (!video) {
-      return res.status(404).json({ message: "Video not found" });
-    }
-    res.json(video);
+    console.log("Fetching transactions for user:", req.user.id);
+
+    const transactions = await Transaction.find({
+      $or: [{ buyer: req.user.id }, { seller: req.user.id }],
+    })
+      .populate({
+        path: "video",
+        select: "title _id",
+      })
+      .populate({
+        path: "buyer",
+        select: "name _id",
+      })
+      .populate({
+        path: "seller",
+        select: "name _id",
+      })
+      .sort({ createdAt: -1 })
+      .lean()
+      .limit(10);
+
+    console.log("Found transactions:", JSON.stringify(transactions, null, 2));
+    res.json(transactions);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Delete Video Route
-router.delete("/:id", authMiddleware, async (req, res) => {
-  try {
-    const video = await Video.findById(req.params.id);
-    if (!video) {
-      return res.status(404).json({ message: "Video not found" });
-    }
-
-    // Check if user owns the video
-    if (video.owner.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to delete this video" });
-    }
-
-    // Find user and update their credits
-    const user = await User.findById(req.user.id);
-    if (user) {
-      user.totalCredits = Math.max(0, (user.totalCredits || 0) - video.credits);
-      await user.save();
-    }
-
-    // Delete the video file
-    const videoPath = path.join(__dirname, "../uploads/videos", video.filename);
-    if (fs.existsSync(videoPath)) {
-      fs.unlinkSync(videoPath);
-    }
-
-    // Delete from database
-    await video.deleteOne();
-
-    res.json({ message: "Video deleted successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Transaction error details:", err);
+    res.status(500).json({
+      error: "Server error",
+      details: err.message,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
   }
 });
 
@@ -275,39 +259,55 @@ router.post("/purchase/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// Get Recent Transactions Route
-router.get("/transactions", authMiddleware, async (req, res) => {
+// Get Video by ID Route
+router.get("/:id", async (req, res) => {
   try {
-    console.log("Fetching transactions for user:", req.user.id);
-
-    const transactions = await Transaction.find({
-      $or: [{ buyer: req.user.id }, { seller: req.user.id }],
-    })
-      .populate({
-        path: "video",
-        select: "title _id",
-      })
-      .populate({
-        path: "buyer",
-        select: "name _id",
-      })
-      .populate({
-        path: "seller",
-        select: "name _id",
-      })
-      .sort({ createdAt: -1 })
-      .lean()
-      .limit(10);
-
-    console.log("Found transactions:", JSON.stringify(transactions, null, 2));
-    res.json(transactions);
+    const video = await Video.findById(req.params.id).populate("owner", "name");
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+    res.json(video);
   } catch (err) {
-    console.error("Transaction error details:", err);
-    res.status(500).json({
-      error: "Server error",
-      details: err.message,
-      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
-    });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Delete Video Route
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const video = await Video.findById(req.params.id);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    // Check if user owns the video
+    if (video.owner.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this video" });
+    }
+
+    // Find user and update their credits
+    const user = await User.findById(req.user.id);
+    if (user) {
+      user.totalCredits = Math.max(0, (user.totalCredits || 0) - video.credits);
+      await user.save();
+    }
+
+    // Delete the video file
+    const videoPath = path.join(__dirname, "../uploads/videos", video.filename);
+    if (fs.existsSync(videoPath)) {
+      fs.unlinkSync(videoPath);
+    }
+
+    // Delete from database
+    await video.deleteOne();
+
+    res.json({ message: "Video deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
