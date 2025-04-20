@@ -71,78 +71,70 @@ def calculate_video_similarity(fingerprint1, fingerprint2):
 
 def process_video(video_path, existing_videos_json=None):
     """Process video and check for duplicates"""
-    try:
-        # Generate fingerprint for new video
-        new_fingerprint = generate_video_fingerprint(video_path)
-        
-        # Parse existing videos data if provided
-        existing_videos = None
-        current_user = None
-        if existing_videos_json:
-            try:
-                data = json.loads(existing_videos_json)
-                existing_videos = data.get('videos', [])
-                current_user = data.get('current_user')
-            except:
-                existing_videos = []
-        
-        # Check for duplicates if existing videos are provided
-        max_similarity = 0
-        is_duplicate = False
-        same_user_upload = False
-        
-        if existing_videos:
-            for video in existing_videos:
-                similarity = calculate_video_similarity(new_fingerprint, video.get('fingerprint', ''))
-                if similarity > max_similarity:
-                    max_similarity = similarity
-                    # Consider it a duplicate if similarity is very high (>95%)
-                    is_duplicate = similarity > 95
-                    same_user_upload = video.get('owner') == current_user
+    # Generate fingerprint for new video
+    new_fingerprint = generate_video_fingerprint(video_path)
+    
+    # Parse existing videos data if provided
+    existing_videos = None
+    current_user = None
+    if existing_videos_json:
+        try:
+            data = json.loads(existing_videos_json)
+            existing_videos = data.get('videos', [])
+            current_user = data.get('current_user')
+        except:
+            existing_videos = []
+    
+    # Check for duplicates if existing videos are provided
+    max_similarity = 0
+    is_duplicate = False
+    same_user_upload = False
+    
+    if existing_videos:
+        for video in existing_videos:
+            similarity = calculate_video_similarity(new_fingerprint, video.get('fingerprint', ''))
+            if similarity > max_similarity:
+                max_similarity = similarity
+                # Consider it a duplicate if similarity is very high (>95%)
+                is_duplicate = similarity > 95
+                same_user_upload = video.get('owner') == current_user
 
-        # Create frames directory if it doesn't exist
-        os.makedirs("frames", exist_ok=True)
-        
-        # Clear any existing frames
-        clear_frames()
+    # Create frames directory if it doesn't exist
+    os.makedirs("frames", exist_ok=True)
+    
+    # Clear any existing frames
+    clear_frames()
 
-        # Extract frames from video
-        extracted_frames = extract_frames(video_path)
-        
-        # Extract text from frames
-        text_data = extract_text_from_images("frames")
-        
-        # Get base analysis
-        analysis = analyze_text(text_data)
-        
-        # Adjust credits based on similarity
-        if is_duplicate:
-            if same_user_upload:
-                # Same user uploading duplicate gets no credits
-                analysis['credits'] = '0'
-                analysis['similarity_message'] = 'No credits awarded - duplicate video upload detected'
-            else:
-                # Different user uploading similar content gets reduced credits
-                original_credits = int(analysis['credits'])
-                reduced_credits = int(original_credits * (1 - (max_similarity / 100)))
-                analysis['credits'] = str(max(0, reduced_credits))
-                analysis['similarity_message'] = f'Credits reduced due to {max_similarity:.1f}% similarity with existing content'
-        
-        # Add fingerprint to analysis
-        analysis['fingerprint'] = new_fingerprint
-        analysis['similarity'] = max_similarity
-        
-        # Clean up frames and video
-        clear_frames()
-        
-        return analysis
-    finally:
-        # Clean up the video file no matter what happens
-        if os.path.exists(video_path):
-            try:
-                os.remove(video_path)
-            except Exception as e:
-                print(f"Error deleting video file: {e}")
+    # Extract frames from video
+    extracted_frames = extract_frames(video_path)
+    
+    # Extract text from frames
+    text_data = extract_text_from_images("frames")
+    
+    # Get base analysis
+    analysis = analyze_text(text_data)
+    
+    # Adjust credits based on similarity
+    if is_duplicate:
+        if same_user_upload:
+            # Same user uploading duplicate gets no credits
+            analysis['credits'] = '0'
+            analysis['similarity_message'] = 'No credits awarded - duplicate video upload detected'
+        else:
+            # Different user uploading similar content gets reduced credits
+            original_credits = int(analysis['credits'])
+            reduced_credits = int(original_credits * (1 - (max_similarity / 100)))
+            analysis['credits'] = str(max(0, reduced_credits))
+            analysis['similarity_message'] = f'Credits reduced due to {max_similarity:.1f}% similarity with existing content'
+    
+    # Add fingerprint to analysis
+    analysis['fingerprint'] = new_fingerprint
+    analysis['similarity'] = max_similarity
+    
+    # Clean up frames
+    clear_frames()
+    
+    return analysis
 
 # Delete old frames
 def clear_frames():
