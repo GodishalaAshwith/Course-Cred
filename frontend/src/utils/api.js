@@ -21,11 +21,12 @@ API.interceptors.request.use(
   }
 );
 
-// Add a response interceptor to handle auth errors
+// Add a response interceptor
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Clear auth data and redirect to login
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
@@ -34,6 +35,4 @@ API.interceptors.response.use(
   }
 );
 
-export const register = (formData) => API.post("/auth/register", formData);
-export const login = (formData) => API.post("/auth/login", formData);
 export default API;

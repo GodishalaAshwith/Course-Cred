@@ -5,6 +5,7 @@ const { spawn } = require("child_process");
 const fs = require("fs");
 const Video = require("../models/Video");
 const User = require("../models/User");
+const Transaction = require("../models/Transaction");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -222,6 +223,91 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Purchase Video Route
+router.post("/purchase/:id", authMiddleware, async (req, res) => {
+  try {
+    const video = await Video.findById(req.params.id);
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    const buyer = await User.findById(req.user.id);
+    const seller = await User.findById(video.owner);
+
+    // Check if user has already purchased the video
+    if (buyer.purchasedVideos.includes(video._id)) {
+      return res.status(400).json({ message: "You already own this video" });
+    }
+
+    // Check if user has enough credits
+    if (buyer.totalCredits < video.credits) {
+      return res.status(400).json({ message: "Insufficient credits" });
+    }
+
+    // Create transaction
+    const transaction = new Transaction({
+      buyer: buyer._id,
+      seller: seller._id,
+      video: video._id,
+      credits: video.credits,
+    });
+    await transaction.save();
+
+    // Update buyer's credits and purchased videos
+    buyer.totalCredits -= video.credits;
+    buyer.purchasedVideos.push(video._id);
+    await buyer.save();
+
+    // Update seller's credits
+    seller.totalCredits += video.credits;
+    await seller.save();
+
+    res.json({
+      message: "Video purchased successfully",
+      transaction: transaction,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get Recent Transactions Route
+router.get("/transactions", authMiddleware, async (req, res) => {
+  try {
+    console.log("Fetching transactions for user:", req.user.id);
+
+    const transactions = await Transaction.find({
+      $or: [{ buyer: req.user.id }, { seller: req.user.id }],
+    })
+      .populate({
+        path: "video",
+        select: "title _id",
+      })
+      .populate({
+        path: "buyer",
+        select: "name _id",
+      })
+      .populate({
+        path: "seller",
+        select: "name _id",
+      })
+      .sort({ createdAt: -1 })
+      .lean()
+      .limit(10);
+
+    console.log("Found transactions:", JSON.stringify(transactions, null, 2));
+    res.json(transactions);
+  } catch (err) {
+    console.error("Transaction error details:", err);
+    res.status(500).json({
+      error: "Server error",
+      details: err.message,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
   }
 });
 

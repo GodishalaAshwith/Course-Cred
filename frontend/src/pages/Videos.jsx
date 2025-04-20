@@ -182,125 +182,137 @@ const Videos = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-600 to-blue-500 pt-16">
-      <div className="flex justify-between items-center px-8 py-6 bg-indigo-700 shadow-md">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Your Videos</h1>
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-center px-4 sm:px-8 py-4 sm:py-6 bg-indigo-700 shadow-md">
+        <div className="text-center sm:text-left mb-4 sm:mb-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">
+            Your Videos
+          </h1>
           <p className="text-white mt-2">Total Credits: {userTotalCredits}</p>
         </div>
         <button
           onClick={() => setShowUploadForm(!showUploadForm)}
-          className="bg-white text-indigo-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-100 transition"
+          className="w-full sm:w-auto bg-white text-indigo-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-100 transition"
         >
           {showUploadForm ? "Close" : "Add Video"}
         </button>
       </div>
 
+      {/* Upload Form */}
       {showUploadForm && (
-        <div className="flex items-center justify-center py-8">
-          <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-lg">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        <div className="flex items-center justify-center py-6 sm:py-8 px-4">
+          <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 w-full max-w-lg">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
               Upload a Video
             </h2>
 
-            <label className="block mb-4">
-              <span className="text-gray-700 font-medium">Video Title:</span>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter a title for your video"
-                className="mt-2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </label>
-
-            <label className="block mb-4">
-              <span className="text-gray-700 font-medium">
-                Choose a video file:
-              </span>
-              <div className="relative mt-2">
+            <div className="space-y-4">
+              {/* Title Input */}
+              <label className="block">
+                <span className="text-gray-700 font-medium">Video Title:</span>
                 <input
-                  type="file"
-                  onChange={handleFileChange}
-                  accept="video/*"
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter a title for your video"
+                  className="mt-2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-                <div className="flex items-center justify-between px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg shadow-sm hover:bg-indigo-200 transition">
-                  <span className="text-sm font-medium">
-                    {file ? file.name : "No file chosen"}
-                  </span>
-                  <span className="text-sm font-semibold">Browse</span>
+              </label>
+
+              {/* File Input */}
+              <label className="block">
+                <span className="text-gray-700 font-medium">
+                  Choose a video file:
+                </span>
+                <div className="relative mt-2">
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    accept="video/*"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex items-center justify-between px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg shadow-sm hover:bg-indigo-200 transition">
+                    <span className="text-sm font-medium truncate">
+                      {file ? file.name : "No file chosen"}
+                    </span>
+                    <span className="text-sm font-semibold">Browse</span>
+                  </div>
+                </div>
+              </label>
+
+              {/* Check Statistics Button */}
+              <button
+                onClick={handleCheckStatistics}
+                className={`w-full py-2 px-4 rounded-lg text-white font-semibold transition ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+                }`}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Check Statistics"}
+              </button>
+
+              {/* Analysis Report */}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Analysis Report:
+                </h3>
+                <div className="bg-gray-100 p-4 rounded-lg shadow space-y-2">
+                  <p className="text-gray-700">
+                    <strong>Summary:</strong> {summary}
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Topics:</strong> {topic}
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Difficulty:</strong> {difficulty}/100
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Content Uniqueness:</strong> {uniqueness}%
+                    <span className="block text-sm text-gray-500 mt-1">
+                      (Higher uniqueness results in more credits)
+                    </span>
+                  </p>
+                  {similarity > 0 && (
+                    <p className="text-amber-600">
+                      <strong>Similarity with existing content:</strong>{" "}
+                      {similarity.toFixed(1)}%
+                      {similarityMessage && (
+                        <span className="block text-sm mt-1">
+                          {similarityMessage}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  <p
+                    className={`font-medium ${
+                      credits === 0 ? "text-red-600" : "text-gray-700"
+                    }`}
+                  >
+                    <strong>Final Credits:</strong> {credits}
+                    <span className="block text-sm text-gray-500 mt-1">
+                      (Based on difficulty, uniqueness, and similarity)
+                    </span>
+                  </p>
                 </div>
               </div>
-            </label>
 
-            <button
-              onClick={handleCheckStatistics}
-              className={`w-full py-2 px-4 rounded-lg text-white font-semibold transition ${
-                loading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-indigo-600 hover:bg-indigo-700"
-              }`}
-              disabled={loading}
-            >
-              {loading ? "Processing..." : "Check Statistics"}
-            </button>
-
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Analysis Report:
-              </h3>
-              <div className="bg-gray-100 p-4 rounded-lg shadow">
-                <p className="text-gray-700 mb-2">
-                  <strong>Summary:</strong> {summary}
-                </p>
-                <p className="text-gray-700 mb-2">
-                  <strong>Topics:</strong> {topic}
-                </p>
-                <p className="text-gray-700 mb-2">
-                  <strong>Difficulty:</strong> {difficulty}/100
-                </p>
-                <p className="text-gray-700 mb-2">
-                  <strong>Content Uniqueness:</strong> {uniqueness}%
-                  <span className="ml-2 text-sm text-gray-500">
-                    (Higher uniqueness results in more credits)
-                  </span>
-                </p>
-                {similarity > 0 && (
-                  <p className="text-amber-600 mb-2">
-                    <strong>Similarity with existing content:</strong>{" "}
-                    {similarity.toFixed(1)}%
-                    {similarityMessage && (
-                      <span className="block text-sm mt-1">
-                        {similarityMessage}
-                      </span>
-                    )}
-                  </p>
-                )}
-                <p
-                  className={`font-medium ${
-                    credits === 0 ? "text-red-600" : "text-gray-700"
-                  }`}
-                >
-                  <strong>Final Credits:</strong> {credits}
-                  <span className="ml-2 text-sm text-gray-500">
-                    (Based on difficulty, uniqueness, and similarity)
-                  </span>
-                </p>
-              </div>
+              {/* Upload Button */}
+              <button
+                onClick={handleUpload}
+                className="w-full mt-4 py-2 px-4 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition"
+              >
+                Upload
+              </button>
             </div>
-
-            <button
-              onClick={handleUpload}
-              className="w-full mt-4 py-2 px-4 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition"
-            >
-              Upload
-            </button>
           </div>
         </div>
       )}
 
-      <div className="px-8 py-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Videos Grid */}
+      <div className="px-4 sm:px-8 py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {videos.length > 0 ? (
             videos.map((video) => (
               <div
@@ -346,7 +358,9 @@ const Videos = () => {
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">
                     {video.title}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-2">{video.summary}</p>
+                  <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                    {video.summary}
+                  </p>
                   <div className="space-y-1">
                     <p className="text-sm text-gray-500">
                       Topics: {video.topics.join(", ")}
@@ -367,7 +381,7 @@ const Videos = () => {
               </div>
             ))
           ) : (
-            <p className="text-white col-span-3 text-center text-lg">
+            <p className="text-white col-span-full text-center text-lg">
               No videos uploaded yet.
             </p>
           )}

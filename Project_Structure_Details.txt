@@ -1,0 +1,190 @@
+===========================================
+COURSECRED - PROJECT STRUCTURE BREAKDOWN
+===========================================
+
+1. Frontend Architecture (React + Vite)
+----------------------------------------
+A. Components Structure:
+   - Navbar: 
+     * Responsive navigation
+     * Authentication state management
+     * Mobile-friendly menu
+   
+   - Pages:
+     * Home: Landing page with features showcase
+     * Login/Register: User authentication forms
+     * Dashboard: Video analysis interface
+     * Videos: Video management and upload
+     * ContactUs: User support interface
+
+B. Technical Stack:
+   - React 18.3 with Vite 5.4
+   - TailwindCSS for styling
+   - React Router for navigation
+   - Axios for API calls
+   - AOS for scroll animations
+
+C. Frontend Features:
+   - Responsive design
+   - Protected routes
+   - JWT token management
+   - File upload handling
+   - Real-time video analysis feedback
+   - Credit system display
+
+2. Backend Architecture (Dual Server)
+----------------------------------------
+A. Node.js Server (Express):
+   - Core Features:
+     * User authentication (JWT)
+     * Video management
+     * Database operations
+     * File storage
+     * API routing
+
+   - Key Files:
+     * server.js: Main Express server
+     * routes/: API endpoints
+     * models/: Database schemas
+     * middleware/: Auth protection
+     * config/: Database configuration
+
+B. Python Server (Flask):
+   - Core Features:
+     * Video processing
+     * AI analysis
+     * Content uniqueness detection
+     * Credit calculation
+     * Frame extraction
+
+   - Key Components:
+     * server.py: Main Flask server
+     * OpenCV integration
+     * Tesseract OCR
+     * Google Generative AI
+     * Image hash generation
+
+3. Database Models (MongoDB)
+----------------------------------------
+A. User Model (User.js):
+   - Fields:
+     * name (String, required)
+     * email (String, required, unique)
+     * password (String, required, hashed)
+     * totalCredits (Number, default: 0)
+     * timestamps
+
+B. Video Model (Video.js):
+   - Fields:
+     * title (String, required)
+     * filename (String, required)
+     * description (String)
+     * uploadDate (Date)
+     * credits (Number, required)
+     * difficulty (String)
+     * topics (Array of Strings)
+     * summary (String)
+     * uniqueness (Number)
+     * videoFingerprint (String)
+     * owner (ObjectId reference)
+     * timestamps
+
+4. API Endpoints
+----------------------------------------
+A. Authentication Routes (/api/auth):
+   - POST /register: User registration
+   - POST /login: User authentication
+   - GET /user: Get user information
+
+B. Video Routes (/api/videos):
+   - POST /analyze: Video analysis
+   - POST /upload: Video upload
+   - GET /user-videos: User's videos
+   - GET /all: All public videos
+   - GET /:id: Single video
+   - DELETE /:id: Delete video
+
+5. Video Processing Pipeline
+----------------------------------------
+1. Upload Handling:
+   - File validation
+   - Temporary storage
+   - Format checking
+
+2. Video Analysis:
+   - Frame extraction (OpenCV)
+   - Text extraction (Tesseract)
+   - Content analysis (Google AI)
+   - Fingerprint generation
+   - Similarity checking
+
+3. Credit Calculation:
+   - Difficulty assessment (1-100)
+   - Uniqueness evaluation
+   - Similarity penalties
+   - Final credit assignment
+
+6. Security Implementation
+----------------------------------------
+A. Authentication:
+   - JWT token generation
+   - Password hashing (bcryptjs)
+   - Protected routes
+   - Token expiration
+
+B. File Security:
+   - Upload validation
+   - Secure storage
+   - Access control
+   - Duplicate detection
+
+7. Project Dependencies
+----------------------------------------
+A. Frontend Dependencies:
+   - react: ^18.3.1
+   - react-dom: ^18.3.1
+   - react-router-dom: ^6.30.0
+   - axios: ^1.8.1
+   - aos: ^2.3.4
+   - tailwindcss: ^4.0.17
+   - vite: ^5.4.1
+
+B. Backend Dependencies:
+   Node.js:
+   - express: ^4.21.2
+   - mongoose: ^8.13.2
+   - bcryptjs: ^3.0.2
+   - jsonwebtoken: ^9.0.2
+   - multer: ^1.4.5-lts.2
+   - cors: ^2.8.5
+
+   Python:
+   - opencv-python: 4.9.0.80
+   - imagehash: 4.3.1
+   - numpy: 1.26.4
+   - google-generativeai: 0.3.2
+   - flask: 3.0.2
+   - flask-cors: 4.0.0
+   - Pillow: 10.2.0
+
+8. Project Setup
+----------------------------------------
+Frontend Setup:
+1. npm install
+2. npm run dev
+   - Runs on http://localhost:5173
+
+Backend Setup:
+1. npm install
+2. pip install -r requirements.txt
+3. Configure environment variables
+4. npm start
+   - Node.js server runs on port 5000
+   - Python Flask server on port 5000
+
+Required Environment Variables:
+- MONGO_URI: MongoDB connection string
+- JWT_SECRET: Secret for JWT tokens
+- PORT: Server port (default 5000)
+
+===========================================
