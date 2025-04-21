@@ -67,7 +67,7 @@ router.post(
         console.error(`Python Error: ${data}`);
       });
 
-      pythonProcess.on("close", (code) => {
+      pythonProcess.on("close", async (code) => {
         if (code !== 0) {
           return res.status(500).json({ message: "Analysis failed" });
         }
@@ -94,7 +94,9 @@ router.post(
   async (req, res) => {
     try {
       const user = await User.findById(req.user.id);
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
       const {
         title,

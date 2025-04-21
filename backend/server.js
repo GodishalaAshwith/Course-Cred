@@ -7,6 +7,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const videoRoutes = require("./routes/video"); // Import video routes
 const adminRoutes = require("./routes/admin"); // Import admin routes
+const complaintRoutes = require("./routes/complaints"); // Import complaint routes
 
 dotenv.config(); // Load environment variables
 
@@ -23,7 +24,7 @@ if (!fs.existsSync(videoUploadPath)) {
 app.use(
   cors({
     origin: "http://localhost:5173", // Allow requests only from your frontend
-    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Added PATCH method
     credentials: true, // Allow cookies and credentials
     exposedHeaders: ["Admin-Access-Code"], // Allow frontend to read this header
   })
@@ -52,6 +53,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/videos", videoRoutes); // Register video routes
 app.use("/api/admin", adminRoutes); // Register admin routes
+app.use("/api/complaints", complaintRoutes); // Register complaint routes
 
 // Default route
 app.get("/", (req, res) => {

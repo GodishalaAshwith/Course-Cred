@@ -5,6 +5,7 @@ import AdminDashboard from "../components/admin/AdminDashboard";
 import UsersTable from "../components/admin/UsersTable";
 import VideosTable from "../components/admin/VideosTable";
 import TransactionsTable from "../components/admin/TransactionsTable";
+import ComplaintsTable from "../components/admin/ComplaintsTable";
 
 function Admin() {
   const navigate = useNavigate();
@@ -193,19 +194,21 @@ function Admin() {
     <div className="min-h-screen bg-gray-900 pt-16">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-wrap gap-4 mb-8">
-          {["dashboard", "users", "videos", "transactions"].map((section) => (
-            <button
-              key={section}
-              onClick={() => setActiveSection(section)}
-              className={`px-4 py-2 rounded ${
-                activeSection === section
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-800 text-gray-200 hover:bg-gray-700"
-              }`}
-            >
-              {section.charAt(0).toUpperCase() + section.slice(1)}
-            </button>
-          ))}
+          {["dashboard", "users", "videos", "transactions", "complaints"].map(
+            (section) => (
+              <button
+                key={section}
+                onClick={() => setActiveSection(section)}
+                className={`px-4 py-2 rounded ${
+                  activeSection === section
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                }`}
+              >
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+              </button>
+            )
+          )}
         </div>
 
         {activeSection === "dashboard" && <AdminDashboard stats={stats} />}
@@ -233,6 +236,11 @@ function Admin() {
         {activeSection === "transactions" && (
           <div className="bg-gray-800 rounded-lg shadow-lg">
             <TransactionsTable transactions={transactions} />
+          </div>
+        )}
+        {activeSection === "complaints" && (
+          <div className="bg-gray-800 rounded-lg shadow-lg p-6">
+            <ComplaintsTable />
           </div>
         )}
       </div>

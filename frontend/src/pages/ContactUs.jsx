@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -6,11 +7,13 @@ const ContactUs = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    subject: "",
     message: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: false, mirror: true });
@@ -18,22 +21,33 @@ const ContactUs = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
-    // Simulate form submission
-    setTimeout(() => {
-      console.log("Form Submitted", formData);
-      setSuccess(true);
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/complaints",
+        formData
+      );
+      if (response.data.success) {
+        setSuccess(true);
+        setFormData({ name: "", email: "", subject: "", message: "" });
+        setTimeout(() => setSuccess(false), 3000);
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.errors?.[0]?.msg ||
+        err.response?.data?.message ||
+        "Failed to submit complaint. Please try again.";
+      setError(errorMessage);
+    } finally {
       setLoading(false);
-      setFormData({ name: "", email: "", message: "" });
-
-      // Reset success message after 3 seconds
-      setTimeout(() => setSuccess(false), 3000);
-    }, 1000);
+    }
   };
 
   return (
@@ -52,7 +66,13 @@ const ContactUs = () => {
 
         {success && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            Message sent successfully!
+            Thank you for your feedback! We'll get back to you soon.
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            {error}
           </div>
         )}
 
@@ -70,6 +90,7 @@ const ContactUs = () => {
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
               required
+              minLength={2}
             />
           </div>
 
@@ -91,6 +112,26 @@ const ContactUs = () => {
 
           <div className="space-y-2">
             <label
+              htmlFor="subject"
+              className="text-gray-700 font-medium block"
+            >
+              Subject
+            </label>
+            <input
+              id="subject"
+              type="text"
+              name="subject"
+              placeholder="What is this regarding?"
+              value={formData.subject}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+              required
+              minLength={5}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
               htmlFor="message"
               className="text-gray-700 font-medium block"
             >
@@ -105,7 +146,8 @@ const ContactUs = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"
               rows="5"
               required
-            ></textarea>
+              minLength={10}
+            />
           </div>
 
           <button
@@ -127,12 +169,12 @@ const ContactUs = () => {
                   r="10"
                   stroke="currentColor"
                   strokeWidth="4"
-                ></circle>
+                />
                 <path
                   className="opacity-75"
                   fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+                />
               </svg>
             ) : (
               "Send Message"
