@@ -71,7 +71,7 @@ const Login = () => {
         </h2>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="mb-4 px-6 py-4 rounded-lg bg-gradient-to-r from-red-50 to-red-100 border border-red-200 text-red-800 shadow-sm transition-all duration-300">
             {error}
           </div>
         )}

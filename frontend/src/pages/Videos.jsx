@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import API from "../utils/api";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const Videos = () => {
   const navigate = useNavigate();
@@ -21,6 +22,13 @@ const Videos = () => {
   const [similarityMessage, setSimilarityMessage] = useState("");
   const [similarity, setSimilarity] = useState(0);
   const [fingerprint, setFingerprint] = useState("");
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [hoveredVideo, setHoveredVideo] = useState(null);
+  const [isPlaying, setIsPlaying] = useState({});
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [videoToDelete, setVideoToDelete] = useState(null);
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: false, mirror: true });
@@ -55,12 +63,21 @@ const Videos = () => {
   };
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const file = e.target.files[0];
+    setFile(file);
+
+    // Create preview URL for the video
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
   };
 
   const handleCheckStatistics = async () => {
     if (!file) {
-      alert("Please select a file first!");
+      setAlertMessage("Please select a file first!");
+      setAlertType("error");
       return;
     }
 
@@ -86,19 +103,22 @@ const Videos = () => {
 
       // Alert user if the video is a duplicate
       if (response.data.credits === "0") {
-        alert(
+        setAlertMessage(
           "This video appears to be a duplicate. No credits will be awarded."
         );
+        setAlertType("error");
       } else if (response.data.similarity > 0) {
-        alert(
+        setAlertMessage(
           `This video has ${response.data.similarity.toFixed(
             1
           )}% similarity with existing content. Credits have been adjusted accordingly.`
         );
+        setAlertType("warning");
       }
     } catch (error) {
       console.error("Statistics check failed:", error);
-      alert("Failed to check statistics! Please try again.");
+      setAlertMessage("Failed to check statistics! Please try again.");
+      setAlertType("error");
     } finally {
       setLoading(false);
     }
@@ -106,7 +126,8 @@ const Videos = () => {
 
   const handleUpload = async () => {
     if (!file || !title) {
-      alert("Please select a file and provide a title!");
+      setAlertMessage("Please select a file and provide a title!");
+      setAlertType("error");
       return;
     }
 
@@ -129,9 +150,11 @@ const Videos = () => {
       });
 
       if (response.data.similarity_message) {
-        alert(response.data.similarity_message);
+        setAlertMessage(response.data.similarity_message);
+        setAlertType("warning");
       } else {
-        alert("Video uploaded successfully!");
+        setAlertMessage("Video uploaded successfully!");
+        setAlertType("success");
       }
 
       fetchUserVideos();
@@ -151,37 +174,110 @@ const Videos = () => {
     } catch (error) {
       console.error("Upload failed:", error);
       if (error.response?.data?.similarity_message) {
-        alert(error.response.data.similarity_message);
+        setAlertMessage(error.response.data.similarity_message);
+        setAlertType("warning");
       } else {
-        alert("Upload failed! Please try again.");
+        setAlertMessage("Upload failed! Please try again.");
+        setAlertType("error");
       }
     }
   };
 
   const handleDeleteVideo = async (videoId, videoCredits) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this video? Your credits will be reduced accordingly."
-      )
-    ) {
-      return;
-    }
+    setVideoToDelete({ id: videoId, credits: videoCredits });
+    setShowDeleteDialog(true);
+  };
 
+  const confirmDelete = async () => {
     try {
-      await API.delete(`/videos/${videoId}`);
-
-      // Update local state
-      setVideos(videos.filter((video) => video._id !== videoId));
-      setUserTotalCredits((prev) => Math.max(0, prev - videoCredits));
-      alert("Video deleted successfully!");
+      await API.delete(`/videos/${videoToDelete.id}`);
+      setVideos(videos.filter((video) => video._id !== videoToDelete.id));
+      setUserTotalCredits((prev) => Math.max(0, prev - videoToDelete.credits));
+      setAlertMessage("Video deleted successfully!");
+      setAlertType("success");
     } catch (error) {
       console.error("Failed to delete video:", error);
-      alert("Failed to delete video. Please try again.");
+      setAlertMessage("Failed to delete video. Please try again.");
+      setAlertType("error");
+    } finally {
+      setShowDeleteDialog(false);
+      setVideoToDelete(null);
     }
+  };
+
+  const handleVideoHover = (videoId) => {
+    setHoveredVideo(videoId);
+  };
+
+  const handleVideoLeave = () => {
+    setHoveredVideo(null);
+  };
+
+  const handleVideoPlay = (videoId) => {
+    setIsPlaying((prev) => ({ ...prev, [videoId]: true }));
+  };
+
+  const handleVideoPause = (videoId) => {
+    setIsPlaying((prev) => ({ ...prev, [videoId]: false }));
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-600 to-blue-500 pt-16">
+      {alertMessage && (
+        <div
+          className={`mx-4 sm:mx-8 mb-4 px-6 py-4 rounded-lg shadow-sm transition-all duration-300 ${
+            alertType === "success"
+              ? "bg-gradient-to-r from-green-50 to-green-100 border border-green-200 text-green-800"
+              : alertType === "error"
+              ? "bg-gradient-to-r from-red-50 to-red-100 border border-red-200 text-red-800"
+              : "bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 text-yellow-800"
+          }`}
+        >
+          <div className="flex items-center">
+            {alertType === "success" && (
+              <svg
+                className="w-5 h-5 mr-3"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+            {alertType === "error" && (
+              <svg
+                className="w-5 h-5 mr-3"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+            {alertType === "warning" && (
+              <svg
+                className="w-5 h-5 mr-3"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+            <p>{alertMessage}</p>
+          </div>
+        </div>
+      )}
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-center px-4 sm:px-8 py-4 sm:py-6 bg-indigo-700 shadow-md">
         <div className="text-center sm:text-left mb-4 sm:mb-0">
@@ -200,7 +296,10 @@ const Videos = () => {
 
       {/* Upload Form */}
       {showUploadForm && (
-        <div className="flex items-center justify-center py-6 sm:py-8 px-4">
+        <div
+          className="flex items-center justify-center py-6 sm:py-8 px-4"
+          data-aos="fade-down"
+        >
           <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 w-full max-w-lg">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
               Upload a Video
@@ -298,6 +397,19 @@ const Videos = () => {
                 </div>
               </div>
 
+              {/* Video Preview */}
+              {previewUrl && (
+                <div className="mt-4">
+                  <h4 className="text-gray-700 font-medium mb-2">Preview:</h4>
+                  <video
+                    className="w-full rounded-lg"
+                    src={previewUrl}
+                    controls
+                    controlsList="nodownload"
+                  />
+                </div>
+              )}
+
               {/* Upload Button */}
               <button
                 onClick={handleUpload}
@@ -317,16 +429,21 @@ const Videos = () => {
             videos.map((video) => (
               <div
                 key={video._id}
-                className="bg-white shadow-lg rounded-lg p-4 flex flex-col"
+                className="bg-white shadow-lg rounded-lg p-4 flex flex-col transform transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+                onMouseEnter={() => handleVideoHover(video._id)}
+                onMouseLeave={handleVideoLeave}
+                data-aos="fade-up"
               >
                 <div className="relative">
-                  <div className="aspect-w-16 aspect-h-9 mb-4">
+                  <div className="aspect-w-16 aspect-h-9 mb-4 group">
                     <video
                       className="w-full h-full rounded-lg object-cover"
                       controlsList="nodownload"
                       disablePictureInPicture
                       playsInline
                       controls
+                      onPlay={() => handleVideoPlay(video._id)}
+                      onPause={() => handleVideoPause(video._id)}
                     >
                       <source
                         src={`http://localhost:5000/uploads/videos/${video.filename}`}
@@ -334,6 +451,23 @@ const Videos = () => {
                       />
                       Your browser does not support the video tag.
                     </video>
+
+                    {/* Hover Overlay */}
+                    {hoveredVideo === video._id && !isPlaying[video._id] && (
+                      <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center rounded-lg transition-opacity">
+                        <svg
+                          className="w-16 h-16 text-white opacity-80"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => handleDeleteVideo(video._id, video.credits)}
@@ -387,6 +521,14 @@ const Videos = () => {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title="Delete Video"
+        message="Are you sure you want to delete this video? Your credits will be reduced accordingly."
+      />
     </div>
   );
 };

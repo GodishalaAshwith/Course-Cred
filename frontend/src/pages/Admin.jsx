@@ -6,6 +6,7 @@ import UsersTable from "../components/admin/UsersTable";
 import VideosTable from "../components/admin/VideosTable";
 import TransactionsTable from "../components/admin/TransactionsTable";
 import ComplaintsTable from "../components/admin/ComplaintsTable";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 function Admin() {
   const navigate = useNavigate();
@@ -21,6 +22,10 @@ function Admin() {
   const [transactions, setTransactions] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [editingVideo, setEditingVideo] = useState(null);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   useEffect(() => {
     checkAdminAuth();
@@ -110,18 +115,31 @@ function Admin() {
       await API.put("/admin/users/" + userId, userData);
       fetchAdminData();
       setEditingUser(null);
+      setAlertMessage("User updated successfully");
+      setAlertType("success");
     } catch (error) {
       setError(error.response?.data?.message || "Failed to update user");
+      setAlertType("error");
     }
   }
 
   async function handleDeleteUser(userId) {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    setUserToDelete(userId);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDeleteUser() {
     try {
-      await API.delete("/admin/users/" + userId);
+      await API.delete("/admin/users/" + userToDelete);
       fetchAdminData();
+      setAlertMessage("User deleted successfully");
+      setAlertType("success");
     } catch (error) {
       setError(error.response?.data?.message || "Failed to delete user");
+      setAlertType("error");
+    } finally {
+      setShowDeleteDialog(false);
+      setUserToDelete(null);
     }
   }
 
@@ -130,8 +148,11 @@ function Admin() {
       await API.put("/admin/videos/" + videoId, videoData);
       fetchAdminData();
       setEditingVideo(null);
+      setAlertMessage("Video updated successfully");
+      setAlertType("success");
     } catch (error) {
       setError(error.response?.data?.message || "Failed to update video");
+      setAlertType("error");
     }
   }
 
@@ -193,6 +214,47 @@ function Admin() {
   return (
     <div className="min-h-screen bg-gray-900 pt-16">
       <div className="container mx-auto px-4 py-8">
+        {alertMessage && (
+          <div
+            className={`mb-4 px-6 py-4 rounded-lg shadow-sm transition-all duration-300 ${
+              alertType === "success"
+                ? "bg-gradient-to-r from-green-50 to-green-100 border border-green-200 text-green-800"
+                : alertType === "error"
+                ? "bg-gradient-to-r from-red-50 to-red-100 border border-red-200 text-red-800"
+                : "bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 text-yellow-800"
+            }`}
+          >
+            <div className="flex items-center">
+              {alertType === "success" && (
+                <svg
+                  className="w-5 h-5 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+              {alertType === "error" && (
+                <svg
+                  className="w-5 h-5 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+              <p>{alertMessage}</p>
+            </div>
+          </div>
+        )}
         <div className="flex flex-wrap gap-4 mb-8">
           {["dashboard", "users", "videos", "transactions", "complaints"].map(
             (section) => (
@@ -244,6 +306,14 @@ function Admin() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDeleteUser}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+      />
     </div>
   );
 }
