@@ -188,3 +188,114 @@ Required Environment Variables:
 - PORT: Server port (default 5000)
 
 ===========================================
+
+3. SYSTEM DESIGN
+
+3.1. Architecture Overview
+The Course-Cred platform implements a modern, scalable architecture designed to handle educational video processing, content verification, and credit distribution. The system follows a microservices-inspired approach while maintaining practical integration boundaries for development efficiency.
+
+At its core, Course-Cred employs a multi-tier architecture:
+1. Client Tier: A React-based single-page application built with Vite, providing responsive interfaces and smooth user experiences using TailwindCSS.
+2. Application Tier: 
+   - Express.js API server handling business logic, authentication, and coordination
+   - Python-based analysis service for video processing and AI-powered content analysis
+3. Data Tier: MongoDB database for persistent storage of user, video, and transaction information
+4. Security Layer: JWT-based authentication, bcrypt password hashing, and role-based access control
+
+This architecture provides several advantages:
+- Clear separation of concerns between frontend, backend logic, and data persistence
+- Specialized technology selection (React/Vite for UI, Express for API, Python for AI)
+- Scalability through component isolation
+- Comprehensive security through layered access control
+
+3.2. Frontend Design
+The Course-Cred frontend employs a modern React-based architecture using Vite for optimal performance. Key aspects include:
+
+1. Component Organization:
+   - Page Components (Home, Dashboard, Admin, Videos)
+   - Feature Components (VideoPlayer, AdminDashboard, ComplaintsTable)
+   - UI Components (Navbar, ConfirmDialog)
+   - Layout Components (structural elements)
+
+2. State Management:
+   - Local state for UI components
+   - Context API for authentication state
+   - API integration through Axios with interceptors
+
+3. Key Features:
+   - Responsive design with TailwindCSS
+   - AOS (Animate On Scroll) for smooth animations
+   - Protected routing with role-based access
+   - Real-time video processing feedback
+
+3.3. Backend Design
+The Course-Cred backend implements a structured API design with two main services:
+
+1. Express.js API Server:
+   - RESTful endpoints with clear resource boundaries
+   - Middleware layers for auth, validation, and error handling
+   - Route organization by domain (auth, videos, admin, complaints)
+   - File handling with secure storage and access control
+
+2. Python Analysis Service:
+   - Video processing and frame extraction
+   - AI-powered content analysis
+   - Uniqueness detection
+   - Credit calculation based on content quality
+
+3.4. Database Schema
+Course-Cred utilizes MongoDB with the following core collections:
+
+1. Users Collection:
+   - Authentication details (email, hashed password)
+   - Profile information (name, credits)
+   - Role information (isAdmin)
+   - Video purchase history
+   - Transaction tracking
+
+2. Videos Collection:
+   - Content metadata (title, description)
+   - File information and storage paths
+   - Analysis results (fingerprint, uniqueness score)
+   - Credit allocation
+   - Owner reference
+
+3. Transactions Collection:
+   - Buyer and seller references
+   - Video reference
+   - Credit amount
+   - Transaction status
+   - Timestamps
+
+4. Complaints Collection:
+   - User contact information
+   - Subject and message
+   - Status tracking
+   - Resolution details
+
+3.5. Security Implementation
+Course-Cred implements comprehensive security measures:
+
+1. Authentication:
+   - JWT-based token system
+   - Secure password hashing with bcrypt
+   - Admin access code system
+   - Token refresh mechanism
+
+2. Authorization:
+   - Role-based access control
+   - Protected routes
+   - Resource ownership validation
+   - Admin privileges management
+
+3. Data Protection:
+   - Secure file storage
+   - Content-Security-Policy headers
+   - CORS configuration
+   - Request validation
+
+4. Content Security:
+   - Video fingerprinting
+   - Duplicate detection
+   - Secure video serving
+   - Credit transaction validation

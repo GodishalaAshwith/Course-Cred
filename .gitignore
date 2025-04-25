@@ -19,6 +19,7 @@
 
 # Generated files
 /backend/frames
+/backend/uploads
 .DS_Store
 *.log
 npm-debug.log*
